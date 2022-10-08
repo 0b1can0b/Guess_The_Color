@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 
-import styled, { createGlobalStyle, css  } from "styled-components";
+import styled, { createGlobalStyle, css } from "styled-components";
+
+import Animate from "./Animate.js";
 
 console.clear();
 
@@ -55,16 +57,14 @@ const Buttons = styled.div`
   justify-content: center;
 `;
 
-const ButtonStyle = styled.button`
-  all: unset;
-  /* background: #343434; */
+const ButtonStyle = styled.div`
   background: ${(props) => props.color || "#343434"};
   border-radius: 0.4rem;
   padding: 1rem 1.6rem;
   flex: 1;
   text-align: center;
   cursor: pointer;
-  pointer-events: ${props => props.disable && "none"};
+  pointer-events: ${(props) => props.disable && "none"};
 
   transition: 0.25s;
   &:hover {
@@ -73,27 +73,11 @@ const ButtonStyle = styled.button`
 `;
 
 const AnswerWrapperStyle = styled.div`
-  height: ${(props) => props.height || 0};
   overflow: hidden;
-  transition: 0.25s;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 `;
-
-const AnswerWrapper = ({ children }) => {
-  const [height, setHeight] = useState(0);
-  const answerRef = useRef(null);
-
-  useEffect(() => {
-    if (answerRef.current) {
-      setHeight(`${answerRef.current.scrollHeight}px`);
-    }
-  }, []);
-
-  return (
-    <AnswerWrapperStyle ref={answerRef} height={height}>
-      {children}
-    </AnswerWrapperStyle>
-  );
-};
 
 const answerStyle = css`
   ${Flex_Column_Rounded};
@@ -109,6 +93,25 @@ const RightAnswerStyle = styled.div`
 const WrongAnswerStyle = styled.div`
   ${answerStyle};
   background: hsl(0 50% 25%);
+`;
+
+const PopupWrapperStyle = styled.div`
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #0008;
+`;
+
+const PopupStyle = styled.div`
+  ${Flex_Column_Rounded};
+  background: #212121;
+  max-width: min(calc(100% - 8rem), calc(500px - 4rem));
 `;
 
 const hexLetters = [
@@ -141,31 +144,146 @@ const getRandomColor = () => {
     .join("")}`;
 };
 
+const AnswerComponent = ({ answer, type, resetApp }) => {
+  const [height, setHeight] = useState("200px");
+  const heightRef = useRef(null);
+
+  const onEnter = () => {
+    setHeight(`${heightRef.current.scrollHeight}px`);
+  };
+
+  return (
+    <Animate
+      on={answer}
+      duration={400}
+      easing="cubic-bezier(0.34, 1.56, 0.64, 1)"
+      from={{
+        opacity: 0,
+        transform: "translate(0, -0rem) scale(0.95)",
+        marginTop: "-1rem",
+        height: 0
+      }}
+      to={{
+        opacity: 1,
+        transform: "translate(0, 0rem) scale(1)",
+        marginTop: 0,
+        height: height
+      }}
+      onEnter={onEnter}
+      unMountOnExit
+    >
+      <AnswerWrapperStyle ref={heightRef}>
+        {type === "right" && (
+          <RightAnswerStyle>Right Answer :)</RightAnswerStyle>
+        )}
+        {type === "wrong" && (
+          <WrongAnswerStyle>Wrong Answer :(</WrongAnswerStyle>
+        )}
+        <ButtonStyle onClick={() => resetApp()}>Play Again</ButtonStyle>
+      </AnswerWrapperStyle>
+    </Animate>
+  );
+};
+
+const PopupComponent = ({ openPopup, setOpenPopup, setNum_of_btns }) => {
+  const popupRef = useRef(null);
+
+  const handelClick = (e) => {
+    setNum_of_btns(e);
+    setOpenPopup(false);
+  };
+
+  return (
+    <Animate
+      on={openPopup}
+      duration={400}
+      easing="cubic-bezier(0.34, 1.56, 0.64, 1)"
+      from={{
+        opacity: 0
+      }}
+      to={{
+        opacity: 1
+      }}
+      unMountOnExit
+    >
+      <PopupWrapperStyle
+        ref={popupRef}
+        onClick={(e) => e.target === popupRef.current && setOpenPopup(false)}
+      >
+        <Animate
+          on={openPopup}
+          duration={400}
+          easing="cubic-bezier(0.34, 1.56, 0.64, 1)"
+          from={{
+            opacity: 0,
+            transform: "scale(0.9) translate(0, 2rem)"
+          }}
+          to={{
+            opacity: 1,
+            transform: "scale(1) translate(0, 0rem)"
+          }}
+          unMountOnExit
+        >
+          <PopupStyle>
+            <Buttons style={{ maxWidth: 500 }}>
+              {Array(10)
+                .fill()
+                .map((e, i) => {
+                  return (
+                    <ButtonStyle key={i} onClick={() => handelClick(i + 1)}>
+                      {i + 1}
+                    </ButtonStyle>
+                  );
+                })}
+            </Buttons>
+            <ButtonStyle onClick={() => setOpenPopup(false)}>Close</ButtonStyle>
+          </PopupStyle>
+        </Animate>
+      </PopupWrapperStyle>
+    </Animate>
+  );
+};
+
 const App = () => {
   const [color, setColor] = useState(getRandomColor());
-  const tempArray = [
-    ...Array(4)
-      .fill()
-      .map(() => getRandomColor()),
-    color
-  ].sort(() => 0.5 - Math.random());
-  const [buttonsArray, setButtonsArray] = useState(tempArray);
+  const [num_of_btns, setNum_of_btns] = useState(3);
+
+  const [otherBtns, setOtherBtns] = useState(
+    [
+      ...Array(num_of_btns - 1)
+        .fill()
+        .map(() => getRandomColor()),
+      color
+    ].sort(() => 0.5 - Math.random())
+  );
+  useEffect(() => {
+    setOtherBtns(
+      [
+        ...Array(num_of_btns - 1)
+          .fill()
+          .map(() => getRandomColor()),
+        color
+      ].sort(() => 0.5 - Math.random())
+    );
+  }, [num_of_btns, color]);
+
+  const [buttonsArray, setButtonsArray] = useState(otherBtns);
 
   const [rightAnswer, setRightAnswer] = useState(false);
   const [wrongAnswer, setWrongAnswer] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState();
+  const [disableClick, setDisableClick] = useState(false);
 
-  const answerDuration = 1200;
   const resetApp = () => {
     setColor(getRandomColor());
     setSelectedAnswer();
+    setRightAnswer();
+    setWrongAnswer();
+    setDisableClick(false);
   };
 
-  useEffect(() => {
-    setButtonsArray(tempArray);
-  }, [color]);
+  useEffect(() => setButtonsArray(otherBtns), [color, otherBtns]);
 
-  const [disableClick, setDisableClick] = useState(false);
   const handelClick = (e) => {
     if (disableClick) return;
     setDisableClick(true);
@@ -173,18 +291,27 @@ const App = () => {
     setSelectedAnswer(e);
     if (e === color) {
       setRightAnswer(true);
-      setTimeout(() => {
-        setRightAnswer(false);
-        resetApp();
-      }, answerDuration);
     } else {
       setWrongAnswer(true);
-      setTimeout(() => {
-        setWrongAnswer(false);
-        resetApp();
-      }, answerDuration);
     }
-    setTimeout(() => setDisableClick(false), answerDuration);
+  };
+
+  const [openPopup, setOpenPopup] = useState(false);
+
+  const hex_TO_rgb = (hex) => {
+    return `rgb(${Array(3)
+      .fill(null)
+      .map((e, i) => {
+        return parseInt(
+          hex
+            .slice(1)
+            .split("")
+            .splice(2 * i, 2)
+            .join(""),
+          16
+        );
+      })
+      .join(", ")})`;
   };
 
   return (
@@ -192,6 +319,9 @@ const App = () => {
       <GlobalStyle />
       <AppStyle>
         <HeadingStyle>Guess The Color</HeadingStyle>
+        <ButtonStyle onClick={() => setOpenPopup(true)}>
+          Select Number of Buttons
+        </ButtonStyle>
         <ColoredBoxStyle color={color} />
         <Buttons>
           {buttonsArray.map((e, i) => {
@@ -211,16 +341,23 @@ const App = () => {
             );
           })}
         </Buttons>
-        {rightAnswer && (
-          <AnswerWrapper>
-            <RightAnswerStyle>RIGHT ANSWER :)</RightAnswerStyle>
-          </AnswerWrapper>
-        )}
-        {wrongAnswer && (
-          <AnswerWrapper>
-            <WrongAnswerStyle>WRONG ANSWER :(</WrongAnswerStyle>
-          </AnswerWrapper>
-        )}
+
+        <AnswerComponent
+          type="right"
+          answer={rightAnswer}
+          resetApp={() => resetApp()}
+        />
+        <AnswerComponent
+          type="wrong"
+          answer={wrongAnswer}
+          resetApp={() => resetApp()}
+        />
+
+        <PopupComponent
+          openPopup={openPopup}
+          setOpenPopup={(e) => setOpenPopup(e)}
+          setNum_of_btns={(e) => setNum_of_btns(e)}
+        />
       </AppStyle>
     </>
   );
