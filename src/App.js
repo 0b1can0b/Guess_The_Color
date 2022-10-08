@@ -1,27 +1,8 @@
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef } from "react";
 
-import styled, { createGlobalStyle, css, keyframes } from "styled-components";
+import styled, { createGlobalStyle, css  } from "styled-components";
 
 console.clear();
-
-// const App = () => {
-//   return (
-//     <div className="App">
-//       <div className="h1">
-//         Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum ex
-//         voluptatibus iure sed accusamus incidunt!
-//       </div>
-//       <div className="text">
-//         Lorem ipsum dolor sit amet consectetur, adipisicing elit. Repellendus
-//         laboriosam est facere aperiam rerum, corporis aliquid velit deleniti
-//         architecto libero autem! Eveniet quod vel nesciunt.
-//       </div>
-//       <button>button</button>
-//     </div>
-//   );
-// };
-
-// export default App;
 
 const GlobalStyle = createGlobalStyle`
   body {
