@@ -9,7 +9,7 @@ const GlobalStyle = createGlobalStyle`
     background: #151515;
     color: silver;
     font-family: SF Mono;
-    font-size: 1.6rem;
+    font-size: 1.2rem;
     margin: 0;
     padding: 2rem;
   }
@@ -27,14 +27,14 @@ const AppStyle = styled.div`
   ${Flex_Column_Rounded};
   /* max-width: 500px; */
   background: #212121;
-  width: 75%;
+  width: min(calc(100% - 2rem), 500px);
   margin-inline: auto;
 `;
 
 const HeadingStyle = styled.div`
   ${Flex_Column_Rounded};
   padding: 0;
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 600;
   text-align: center;
 `;
